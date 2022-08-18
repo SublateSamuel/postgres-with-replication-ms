@@ -1,0 +1,53 @@
+version: '3.9'
+services:
+  postgres:  ##-------------------------------- database primario
+    container_name: postgres
+    image: bitnami/postgresql:latest
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=root
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=root
+      - POSTGRESQL_DATABASE=my_database
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "5432"
+    networks:
+      - database-network
+    volumes:
+      - ./postgres-database:/var/lib/postgresql
+  postgres2:  ##------------------------------------ database backup
+    container_name: postgres2
+    image: bitnami/postgresql:latest
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=root
+      - POSTGRESQL_MASTER_HOST=postgres
+      - POSTGRESQL_PASSWORD=root
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "5432"
+    depends_on:
+      - postgres
+    networks:
+      - database-network
+    volumes:
+      - ./postgres-database-backup:/var/lib/postgresql
+  pgadmin:  ##----------------------------------------- pgadmin4
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "sublatesamuel@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "root"
+    ports:
+      - "16543:80"
+    depends_on:
+      - postgres
+    networks:
+      - database-network
+networks: ##------------------------------------------- network em bridge
+  database-network:
+    driver: bridge
